@@ -335,6 +335,28 @@ def encontrar_imagem_variante(peca, images):
     return None
 
 
+CODIGOS_ESTOQUE_PATH = "/home/daniel/projetos_sh/moto_faixxa/CÓDIGO PARA ESTOQUE SITE.txt"
+
+
+def carregar_codigos_estoque(caminho):
+    """Carrega os códigos de referência do arquivo de estoque.
+
+    Retorna um set com os códigos normalizados (ex: '78900000 2151').
+    """
+    codigos = set()
+    if not caminho:
+        return codigos
+    try:
+        with open(caminho, 'r', encoding='utf-8') as f:
+            for linha in f:
+                linha = linha.strip()
+                if linha and linha.startswith('7890'):
+                    codigos.add(linha)
+    except FileNotFoundError:
+        print(f"AVISO: Arquivo de códigos de estoque não encontrado: {caminho}")
+    return codigos
+
+
 TEXTO_DESCRICAO_PADRAO = """<p>Nossas faixas adesivas são confeccionadas em processo exatamente igual das originais.</p>
 <p>Os materiais adesivos utilizados são <strong>Oracal 651</strong>. Estes materiais são os melhores disponíveis no mercado brasileiro e estão entre os melhores do mundo, o que garante tranquilidade ao consumidor em ter em mãos um produto que se aproxima bastante ao produto original em termos de qualidade.</p>
 <p>O processo de impressão é o <strong>serigrafico</strong> para possibilitar fidelidade e solidez das cores, isto é, não desbotam e tem as tonalidades o mais próximo possível das originais. Dizemos isso pois ainda que na maioria dos casos seja possível reproduzir com fidelidade as cores das originais, em alguns tentamos aproximar ao máximo pois dependemos de pigmentos especiais que não existem no mercado brasileiro. No momento da compra questione sobre isso, caso não seja alertado por nós, para que você saiba exatamente o que está comprando.</p>"""
@@ -367,7 +389,7 @@ def gerar_descricao_produto(marca, modelo, cor, pecas):
     return descricao
 
 
-def converter_para_nuvemshop(documentos, indice_imagens=None):
+def converter_para_nuvemshop(documentos, indice_imagens=None, codigos_estoque=None):
     """Converte documentos do formato interno para formato Nuvemshop."""
     produtos_nuvemshop = []
     produtos_com_imagem = 0
@@ -420,11 +442,20 @@ def converter_para_nuvemshop(documentos, indice_imagens=None):
             # Encontrar imagem correspondente à variante
             image_id = encontrar_imagem_variante(peca, images)
 
+            # Stock = 1 se o SKU está na lista de estoque E a variante tem imagem
+            sku = var.get("referencia")
+            tem_estoque = (
+                codigos_estoque
+                and sku
+                and sku in codigos_estoque
+                and image_id is not None
+            )
+
             variante_ns = {
                 "position": i + 1,
-                "sku": var.get("referencia"),
+                "sku": sku,
                 "price": var.get("preco", 0.0),
-                "stock": 1,
+                "stock": 1 if tem_estoque else 0,
                 "stock_management": True,
                 "values": values,
                 "imageId": image_id,
@@ -869,9 +900,14 @@ def main():
     print(f"  Marcas encontradas: {len(indice_imagens)}")
     print(f"  Pastas com imagens: {total_pastas}")
 
+    # Carregar códigos de estoque
+    print("\nCarregando códigos de estoque...")
+    codigos_estoque = carregar_codigos_estoque(CODIGOS_ESTOQUE_PATH)
+    print(f"  Códigos de estoque carregados: {len(codigos_estoque)}")
+
     # Converter para formato Nuvemshop
     print("\nConvertendo produtos...")
-    produtos_nuvemshop = converter_para_nuvemshop(documentos, indice_imagens)
+    produtos_nuvemshop = converter_para_nuvemshop(documentos, indice_imagens, codigos_estoque)
     print(f"\nTotal de produtos Nuvemshop: {len(produtos_nuvemshop)}")
 
     # Obter coleção Nuvemshop
