@@ -45,10 +45,22 @@ python import_precos.py
 
 A planilha deve ter as seguintes abas: SUZUKI, YAMAHA, HONDA, KAWASAKI, OUTRAS
 
+### Abas SUZUKI, YAMAHA, HONDA, KAWASAKI
+
 Cada bloco de produto é separado por uma linha vazia (preço=0). Dentro do bloco:
+- **Marca**: nome da aba
 - **Modelo**: primeira linha com modelo preenchido
 - **Cor**: primeira linha com cor preenchida
 - **Localização**: primeira linha com localização preenchida
+
+### Aba OUTRAS
+
+Funciona de forma diferenciada:
+- Antes dos blocos há uma linha com apenas a **marca** (ex: AGRALE, APRILIA, BMW)
+- Essa marca se aplica a todos os blocos seguintes até encontrar uma nova linha de marca
+- Marcas são identificadas por: primeira coluna preenchida, demais vazias, sem números ou "GAV"
+
+Marcas disponíveis: AGRALE, APRILIA, BMW, BUELL, CALOI, DAFRA, DIVERSAS, DUCATI, HARLEY DAVIDSON, KASINSKI, KTM, MONARK, MV AGUSTA, SHINERAY, entre outras.
 
 ## Estrutura do Documento MongoDB
 
